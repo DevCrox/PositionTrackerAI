@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Squat Coach</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <h1>AI Squat Coach</h1>
+
+    <div id="canvas-container">
+        <video id="video" playsinline></video>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div id="feedback">Initializing camera...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.0"></script>
+
+    <script>
+        // Get references to HTML elements
+        const videoElement = document.getElementById('video');
+        const canvasElement = document.getElementById('canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const feedbackElement = document.getElementById('feedback');
+
+        let detector = null;
+
+        // MoveNet keypoint indices for squat analysis
+        const KEYPOINTS = {
+            LEFT_HIP: 11,
+            LEFT_KNEE: 13,
+            LEFT_ANKLE: 15,
+            RIGHT_HIP: 12,
+            RIGHT_KNEE: 14,
+            RIGHT_ANKLE: 16
+        };
+
+        /**
+         * Calculate the angle between three points in 3D space
+         * @param {Object} a - First point (e.g., hip) with x, y coordinates
+         * @param {Object} b - Middle point (e.g., knee) with x, y coordinates
+         * @param {Object} c - Third point (e.g., ankle) with x, y coordinates
+         * @returns {number} The angle in degrees
+         */
+        function calculateAngle(a, b, c) {
+            // Calculate vectors from point b to points a and c
+            const radians = Math.atan2(c.y - b.y, c.x - b.x) -
+                Math.atan2(a.y - b.y, a.x - b.x);
+
+            // Convert radians to degrees
+            let angle = Math.abs(radians * 180.0 / Math.PI);
+
+            // Ensure angle is between 0 and 180 degrees
+            if (angle > 180.0) {
+                angle = 360 - angle;
+            }
+
+            return angle;
+        }
+
+        /**
+         * Draw the pose skeleton on the canvas
+         * @param {Array} keypoints - Array of detected keypoints
+         */
+        function drawPose(keypoints) {
+            // Define skeleton connections
+            const connections = [
+                [5, 6], [5, 7], [7, 9], [6, 8], [8, 10], // Arms
+                [5, 11], [6, 12], [11, 12], // Torso
+                [11, 13], [13, 15], [12, 14], [14, 16], // Legs
+                [0, 1], [0, 2], [1, 3], [2, 4] // Face
+            ];
+
+            // Draw connections (skeleton lines)
+            canvasCtx.strokeStyle = '#00FF00';
+            canvasCtx.lineWidth = 4;
+
+            connections.forEach(([startIdx, endIdx]) => {
+                const start = keypoints[startIdx];
+                const end = keypoints[endIdx];
+
+                if (start && end && start.score > 0.3 && end.score > 0.3) {
+                    canvasCtx.beginPath();
+                    canvasCtx.moveTo(start.x, start.y);
+                    canvasCtx.lineTo(end.x, end.y);
+                    canvasCtx.stroke();
+                }
+            });
+
+            // Draw keypoints (joints)
+            keypoints.forEach((keypoint) => {
+                if (keypoint.score > 0.3) {
+                    canvasCtx.fillStyle = '#FF0000';
+                    canvasCtx.strokeStyle = '#FFFFFF';
+                    canvasCtx.lineWidth = 2;
+
+                    canvasCtx.beginPath();
+                    canvasCtx.arc(keypoint.x, keypoint.y, 6, 0, 2 * Math.PI);
+                    canvasCtx.fill();
+                    canvasCtx.stroke();
+                }
+            });
+        }
+
+        /**
+         * Process pose detection and provide coaching feedback
+         */
+        async function detectPose() {
+            if (!detector) return;
+
+            // Detect poses in the video frame
+            const poses = await detector.estimatePoses(videoElement);
+
+            // Clear the canvas
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+            // Draw the video frame onto the canvas
+            canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+
+            // Check if a pose was detected
+            if (poses.length > 0) {
+                const pose = poses[0];
+                const keypoints = pose.keypoints;
+
+                // Draw the pose skeleton
+                drawPose(keypoints);
+
+                // Extract keypoints for squat analysis
+                const leftHip = keypoints[KEYPOINTS.LEFT_HIP];
+                const leftKnee = keypoints[KEYPOINTS.LEFT_KNEE];
+                const leftAnkle = keypoints[KEYPOINTS.LEFT_ANKLE];
+
+                const rightHip = keypoints[KEYPOINTS.RIGHT_HIP];
+                const rightKnee = keypoints[KEYPOINTS.RIGHT_KNEE];
+                const rightAnkle = keypoints[KEYPOINTS.RIGHT_ANKLE];
+
+                // Additional keypoints for comprehensive analysis
+                const leftShoulder = keypoints[5];
+                const rightShoulder = keypoints[6];
+                const nose = keypoints[0];
+
+                // Check if all required keypoints are detected with good confidence
+                if (leftHip.score > 0.3 && leftKnee.score > 0.3 && leftAnkle.score > 0.3 &&
+                    rightHip.score > 0.3 && rightKnee.score > 0.3 && rightAnkle.score > 0.3 &&
+                    leftShoulder.score > 0.3 && rightShoulder.score > 0.3) {
+
+                    // Calculate KNEE angles (hip-knee-ankle)
+                    const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
+                    const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
+                    const avgKneeAngle = (leftKneeAngle + rightKneeAngle) / 2;
+
+                    // Calculate HIP angles (shoulder-hip-knee)
+                    const leftHipAngle = calculateAngle(leftShoulder, leftHip, leftKnee);
+                    const rightHipAngle = calculateAngle(rightShoulder, rightHip, rightKnee);
+                    const avgHipAngle = (leftHipAngle + rightHipAngle) / 2;
+
+                    // Calculate BACK angle (vertical alignment)
+                    // Using shoulder and hip to determine torso lean
+                    const avgShoulderX = (leftShoulder.x + rightShoulder.x) / 2;
+                    const avgShoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+                    const avgHipX = (leftHip.x + rightHip.x) / 2;
+                    const avgHipY = (leftHip.y + rightHip.y) / 2;
+
+                    // Calculate back lean angle from vertical
+                    const backLeanRadians = Math.atan2(avgShoulderX - avgHipX, avgHipY - avgShoulderY);
+                    const backLeanAngle = Math.abs(backLeanRadians * 180 / Math.PI);
+
+                    // Calculate ANKLE angles (knee-ankle-floor approximation)
+                    // We approximate floor by using a point below the ankle
+                    const leftFloorPoint = { x: leftAnkle.x, y: leftAnkle.y + 100 };
+                    const rightFloorPoint = { x: rightAnkle.x, y: rightAnkle.y + 100 };
+                    const leftAnkleAngle = calculateAngle(leftKnee, leftAnkle, leftFloorPoint);
+                    const rightAnkleAngle = calculateAngle(rightKnee, rightAnkle, rightFloorPoint);
+                    const avgAnkleAngle = (leftAnkleAngle + rightAnkleAngle) / 2;
+
+                    // Comprehensive form analysis
+                    let formIssues = [];
+                    let formScore = 0;
+
+                    // Knee depth analysis (primary metric)
+                    if (avgKneeAngle > 160) {
+                        formIssues.push("Start squatting");
+                    } else if (avgKneeAngle >= 90 && avgKneeAngle <= 160) {
+                        formIssues.push("Go lower");
+                        formScore += 1;
+                    } else {
+                        formIssues.push("Great depth");
+                        formScore += 3;
+                    }
+
+                    // Hip angle analysis (should hinge properly)
+                    if (avgHipAngle < 45) {
+                        formIssues.push("⚠️ Hips too low");
+                    } else if (avgHipAngle > 100) {
+                        formIssues.push("⚠️ Hinge at hips more");
+                    } else {
+                        formScore += 2;
+                    }
+
+                    // Back angle analysis (should stay relatively upright)
+                    if (backLeanAngle > 45) {
+                        formIssues.push("⚠️ Keep chest up");
+                    } else if (backLeanAngle < 10) {
+                        formIssues.push("✓ Good back position");
+                        formScore += 2;
+                    } else {
+                        formScore += 1;
+                    }
+
+                    // Ankle mobility analysis
+                    if (avgAnkleAngle < 70) {
+                        formIssues.push("⚠️ Heels lifting");
+                    } else if (avgAnkleAngle > 110) {
+                        formIssues.push("⚠️ Lean forward more");
+                    } else {
+                        formScore += 1;
+                    }
+
+                    // Provide overall feedback based on form score
+                    feedbackElement.className = ''; // Reset classes
+
+                    if (avgKneeAngle > 160) {
+                        feedbackElement.textContent = 'Start Squatting';
+                        feedbackElement.classList.add('start');
+                    } else if (formScore >= 7) {
+                        feedbackElement.textContent = '🏆 Perfect Form!';
+                        feedbackElement.classList.add('good');
+                    } else if (formScore >= 4) {
+                        feedbackElement.textContent = formIssues.slice(1).join(' • ');
+                        feedbackElement.classList.add('lower');
+                    } else {
+                        feedbackElement.textContent = formIssues.slice(1).join(' • ');
+                        feedbackElement.classList.add('lower');
+                    }
+
+                    // Display comprehensive angle values on canvas
+                    canvasCtx.fillStyle = '#FFFFFF';
+                    canvasCtx.font = 'bold 18px Arial';
+                    canvasCtx.strokeStyle = '#000000';
+                    canvasCtx.lineWidth = 3;
+
+                    const metrics = [
+                        `Knee: ${avgKneeAngle.toFixed(0)}°`,
+                        `Hip: ${avgHipAngle.toFixed(0)}°`,
+                        `Back Lean: ${backLeanAngle.toFixed(0)}°`,
+                        `Ankle: ${avgAnkleAngle.toFixed(0)}°`,
+                        `Score: ${formScore}/8`
+                    ];
+
+                    metrics.forEach((text, index) => {
+                        const y = 25 + (index * 25);
+                        canvasCtx.strokeText(text, 10, y);
+                        canvasCtx.fillText(text, 10, y);
+                    });
+                }
+            } else {
+                // No pose detected
+                feedbackElement.textContent = 'No pose detected - step back';
+                feedbackElement.className = '';
+            }
+
+            // Continue the loop
+            requestAnimationFrame(detectPose);
+        }
+
+        /**
+         * Initialize the webcam and pose detector
+         */
+        async function initCamera() {
+            try {
+                feedbackElement.textContent = 'Loading AI model...';
+
+                // Wait for TensorFlow.js to be ready
+                await tf.ready();
+
+                // Create MoveNet detector
+                detector = await poseDetection.createDetector(
+                    poseDetection.SupportedModels.MoveNet,
+                    {
+                        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
+                    }
+                );
+
+                feedbackElement.textContent = 'Requesting camera access...';
+
+                // Check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera access not supported on this browser');
+                }
+
+                // Request access to the user's webcam
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    }
+                });
+
+                videoElement.srcObject = stream;
+
+                // Wait for video metadata to load
+                await new Promise((resolve) => {
+                    videoElement.onloadedmetadata = () => {
+                        resolve();
+                    };
+                });
+
+                // Set canvas dimensions to match video
+                canvasElement.width = videoElement.videoWidth;
+                canvasElement.height = videoElement.videoHeight;
+
+                // Start video playback
+                await videoElement.play();
+
+                feedbackElement.textContent = 'Ready! Stand in front of camera';
+
+                // Start the processing loop
+                detectPose();
+
+            } catch (error) {
+                console.error('Error:', error);
+                feedbackElement.textContent = 'Error: ' + error.message;
+                feedbackElement.style.background = 'rgba(244, 67, 54, 0.95)';
+                feedbackElement.style.color = 'white';
+            }
+        }
+
+        // Start the application when the page loads
+        window.addEventListener('load', initCamera);
+    </script>
+
+</body>
+
+</html>
