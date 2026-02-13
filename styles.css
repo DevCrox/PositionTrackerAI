@@ -5,30 +5,48 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #111;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     padding: 20px;
+    color: #ffffff;
+}
+
+/* Text Button (Toggle) */
+.btn-text {
+    background: none;
+    border: none;
+    color: #888;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.btn-text:hover {
+    color: #fff;
 }
 
 h1 {
-    color: white;
-    font-size: 3rem;
+    color: #ffffff;
+    font-size: 2.5rem;
     margin-bottom: 30px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
+    letter-spacing: -0.5px;
     text-align: center;
 }
 
 #canvas-container {
     position: relative;
-    border-radius: 20px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     background: #000;
+    border: 1px solid #333;
 }
 
 #video {
@@ -42,32 +60,63 @@ h1 {
 }
 
 #feedback {
-    margin-top: 30px;
-    padding: 25px 50px;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
-    font-size: 2rem;
-    font-weight: bold;
-    color: #667eea;
+    margin-top: 24px;
+    padding: 20px 40px;
+    background: #2a2a2a;
+    border-radius: 10px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
     text-align: center;
     min-width: 400px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
+    border: 1px solid #3a3a3a;
 }
 
 #feedback.start {
-    background: rgba(255, 193, 7, 0.95);
-    color: #333;
+    background: #3a3a3a;
+    color: #ffd700;
+    border-color: #4a4a4a;
 }
 
 #feedback.lower {
-    background: rgba(255, 152, 0, 0.95);
-    color: white;
+    background: #2d3748;
+    color: #ffa500;
+    border-color: #4a5568;
 }
 
 #feedback.good {
-    background: rgba(76, 175, 80, 0.95);
-    color: white;
+    background: #1e4620;
+    color: #4ade80;
+    border-color: #2d5a2f;
+}
+
+#call-coach-btn {
+    margin-top: 16px;
+    padding: 12px 32px;
+    background: #4a5568;
+    color: #ffffff;
+    border: 1px solid #5a6578;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#call-coach-btn:hover {
+    background: #5a6578;
+    border-color: #6a7588;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#call-coach-btn:active {
+    transform: translateY(0);
 }
 
 @media (max-width: 768px) {
@@ -76,8 +125,403 @@ h1 {
     }
 
     #feedback {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         min-width: 300px;
-        padding: 20px 30px;
+        padding: 16px 24px;
+    }
+}
+
+/* Exercise Selection Styles */
+#exercise-selection {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+#exercise-selection h2 {
+    color: #e5e7eb;
+    font-size: 1.75rem;
+    margin-bottom: 40px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+}
+
+.exercise-buttons {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.exercise-btn {
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 12px;
+    padding: 32px 48px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-width: 180px;
+}
+
+.exercise-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    background: #333333;
+    border-color: #4a4a4a;
+}
+
+.exercise-btn:active {
+    transform: translateY(-2px);
+}
+
+.exercise-btn .emoji {
+    font-size: 3.5rem;
+}
+
+.exercise-btn .name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+    .exercise-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .exercise-btn {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+/* --- NEW PREMIUM UI STYLES --- */
+
+/* Glassmorphism Card Style */
+.glass-panel {
+    background: rgba(42, 42, 42, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border-radius: 16px;
+    color: white;
+}
+
+/* Auth Container Redesign */
+.auth-container {
+    max-width: 420px;
+    margin: 80px auto;
+    padding: 3rem;
+    text-align: center;
+}
+
+.auth-title {
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(45deg, #00E676, #00B0FF);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* Input Fields */
+.input-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.auth-input:focus {
+    border-color: #00E676;
+    outline: none;
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.3);
+}
+
+/* Dashboard Layout */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    width: 100%;
+}
+
+.card {
+    background: rgba(42, 42, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.add-member-section {
+    display: flex;
+    gap: 12px;
+}
+
+.add-member-section input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: white;
+    font-family: inherit;
+}
+
+.add-member-section button {
+    background: #00E676;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-member-section button:hover {
+    background: #00c853;
+    transform: translateY(-2px);
+}
+
+/* Athlete specific */
+.code-display {
+    background: rgba(0, 0, 0, 0.2);
+    border: 2px dashed #444;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.code-display h1 {
+    color: #00E676;
+    font-family: monospace;
+    letter-spacing: 4px;
+    margin-top: 10px;
+}
+
+.btn-primary {
+    background: #00B0FF;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 1rem;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background: #0091ea;
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.4);
+}
+
+.btn-back {
+    background: none;
+    border: 1px solid #444;
+    color: #888;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 2rem;
+}
+
+.btn-back:hover {
+    color: white;
+    border-color: #666;
+}
+
+/* Primary Button */
+.btn-neon {
+    background: linear-gradient(90deg, #00E676, #00C853);
+    color: #000;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 16px 32px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.btn-neon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.6);
+}
+
+/* Dashboard Grid */
+.dashboard-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.dashboard-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge.connected {
+    background: rgba(0, 230, 118, 0.2);
+    color: #00E676;
+    border: 1px solid #00E676;
+}
+
+.status-badge.disconnected {
+    background: rgba(255, 23, 68, 0.2);
+    color: #FF1744;
+    border: 1px solid #FF1744;
+}
+
+/* Athlete Code Display (Big) */
+.code-box {
+    text-align: center;
+    padding: 3rem;
+    border: 2px dashed #444;
+    border-radius: 20px;
+    margin: 2rem 0;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.code-value {
+    font-size: 4rem;
+    font-family: monospace;
+    color: #00E676;
+    text-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+    letter-spacing: 8px;
+    margin: 1rem 0;
+}
+
+/* Notification Item */
+.notif-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 4px solid #00E676;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notif-text {
+    font-size: 1.1rem;
+}
+
+.notif-time {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-top: 4px;
+}
+
+/* Navbar Premium */
+/* Navbar Premium */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #333;
+    padding: 1rem 3rem;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-brand {
+    font-family: 'Segoe UI', sans-serif;
+    letter-spacing: 2px;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.btn-icon:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Fixes */
+@media (max-width: 768px) {
+    .dashboard-header-flex {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .code-value {
+        font-size: 2.5rem;
+        letter-spacing: 4px;
+    }
+
+    .auth-container {
+        margin: 20px;
+        padding: 2rem;
     }
 }
